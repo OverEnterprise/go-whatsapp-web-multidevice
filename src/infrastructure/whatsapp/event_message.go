@@ -209,6 +209,7 @@ func payloadHasNoRenderableContent(payload map[string]any) bool {
 		"body",
 		"image", "audio", "video", "video_note", "document", "sticker",
 		"contact", "contacts_array", "list", "live_location", "location", "order",
+		"interactive_reply",
 	}
 	for _, key := range renderableKeys {
 		if _, ok := payload[key]; ok {
@@ -236,7 +237,11 @@ func hasRecognizedMessageType(msg *waE2E.Message) bool {
 		msg.GetListMessage() != nil,
 		msg.GetLiveLocationMessage() != nil,
 		msg.GetLocationMessage() != nil,
-		msg.GetOrderMessage() != nil:
+		msg.GetOrderMessage() != nil,
+		msg.GetButtonsResponseMessage() != nil,
+		msg.GetListResponseMessage() != nil,
+		msg.GetTemplateButtonReplyMessage() != nil,
+		msg.GetInteractiveResponseMessage().GetNativeFlowResponseMessage() != nil:
 		return true
 	default:
 		return false
