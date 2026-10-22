@@ -343,6 +343,8 @@ func buildOptionalFields(ctx context.Context, client *whatsmeow.Client, evt *eve
 
 	buildOtherMessageTypes(msg, payload)
 
+	addMessageMetadataFields(ctx, client, msg, payload)
+
 	return nil
 }
 
