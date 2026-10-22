@@ -1,7 +1,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM golang:1.26-alpine3.23 AS builder
+FROM golang:1.26-alpine3.23@sha256:0525c952defebc693cdaf62cdf43afa32be5a7f377e99260642ea19c240c708e AS builder
 RUN apk add --no-cache gcc musl-dev gcompat
 WORKDIR /whatsapp
 
@@ -16,7 +16,7 @@ RUN go build -ldflags="-w -s" -o /app/whatsapp
 #############################
 ## STEP 2 build a smaller image
 #############################
-FROM alpine:3.23
+FROM alpine:3.23@sha256:21f3e19bafab57a9ff7aa9dd571dac72f868370472c10f450cc0416cc1aca553
 RUN apk add --no-cache ffmpeg libwebp-tools poppler-utils tzdata su-exec
 
 # BusyBox adduser rejects uid == gid when that gid already exists as a group; use distinct ids.
