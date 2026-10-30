@@ -39,6 +39,7 @@ func handler(ctx context.Context, instance *DeviceInstance, rawEvt any) {
 	case *events.PairSuccess:
 		instance.ClearPasskeyState()
 		handlePairSuccess(ctx, evt)
+		forwardConnection(ctx, evt, instance.JID(), instance.ID())
 	case *events.PairPasskeyRequest:
 		handlePairPasskeyRequest(instance, evt)
 	case *events.PairPasskeyConfirmation:
@@ -46,7 +47,10 @@ func handler(ctx context.Context, instance *DeviceInstance, rawEvt any) {
 	case *events.PairPasskeyError:
 		handlePairPasskeyError(instance, evt)
 	case *events.LoggedOut:
+		forwardLoggedOut(ctx, evt, instance.JID(), instance.ID())
 		handleLoggedOut(instance)
+	case *events.TemporaryBan:
+		forwardConnection(ctx, evt, instance.JID(), instance.ID())
 	case *events.Connected, *events.PushNameSetting:
 		handleConnectionEvents(ctx, client, instance)
 	case *events.StreamReplaced:
@@ -67,14 +71,17 @@ func handler(ctx context.Context, instance *DeviceInstance, rawEvt any) {
 		forwardPresence(ctx, evt, instance.JID(), client)
 	case *events.PushName, *events.Picture, *events.UserAbout, *events.BusinessName:
 		forwardContactUpdate(ctx, evt, instance.JID(), client)
+		forwardGroupInfo(ctx, evt, instance.JID(), client)
 	case *events.ChatPresence:
 		handleChatPresence(ctx, evt, instance.JID(), client)
 	case *events.HistorySync:
 		handleHistorySync(ctx, evt, chatStorageRepo, client)
+		forwardHistorySync(ctx, evt, instance.JID(), client)
 	case *events.AppState:
 		handleAppState(ctx, evt, instance.JID(), client)
 	case *events.GroupInfo:
 		handleGroupInfo(ctx, evt, instance.JID(), client)
+		forwardGroupInfo(ctx, evt, instance.JID(), client)
 	case *events.JoinedGroup:
 		handleJoinedGroup(ctx, evt, instance.JID(), client)
 	case *events.NewsletterJoin:
@@ -326,6 +333,9 @@ func handleReceipt(ctx context.Context, evt *events.Receipt, deviceID string, cl
 	case types.ReceiptTypeDelivered:
 		sendReceipt = true
 		log.Infof("%s was delivered to %s at %s: %+v", evt.MessageIDs[0], evt.SourceString(), evt.Timestamp, evt)
+	case types.ReceiptTypePlayed, types.ReceiptTypePlayedSelf:
+		sendReceipt = true
+		log.Infof("%v was played by %s at %s: %+v", evt.MessageIDs, evt.SourceString(), evt.Timestamp, evt)
 	}
 
 	// Forward receipt (ack) event to webhook or Chatwoot if configured
